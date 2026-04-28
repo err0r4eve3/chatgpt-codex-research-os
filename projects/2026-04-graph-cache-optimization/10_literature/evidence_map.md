@@ -29,3 +29,5 @@ Separate facts, author claims, and inferences.
 Record NotebookLM answers only as leads. Verify against underlying sources before promoting them to facts.
 
 - TBD
+
+When a NotebookLM lead is verified, cite the canonical source from `source_manifest.yaml`, not the NotebookLM export.

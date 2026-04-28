@@ -5,7 +5,8 @@ Store exported NotebookLM summaries, source content snippets, query answers, and
 Rules:
 
 - Keep exports source-grounded.
-- Record the source IDs in `../notebooklm_manifest.yaml`.
+- Record canonical source IDs in `../source_manifest.yaml`.
+- Record each export in `export_index.yaml`.
 - Verify important statements against the underlying paper, benchmark, repository, or official docs before moving them into claims.
+- Do not cite NotebookLM exports directly in `70_claims/claims.yaml`.
 - Do not store auth tokens, cookies, credentials, private keys, or sensitive raw data.
-

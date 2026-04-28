@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "notebooklm_export_index",
+  "type": "object",
+  "required": ["exports"],
+  "properties": {
+    "exports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "export_id",
+          "notebook_id",
+          "query",
+          "source_ids",
+          "output_path",
+          "verification_status",
+          "allowed_for_evidence_map",
+          "allowed_for_claims"
+        ],
+        "properties": {
+          "export_id": { "type": "string" },
+          "notebook_id": { "type": "string" },
+          "query": { "type": "string" },
+          "source_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "notebooklm_source_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "output_path": { "type": "string" },
+          "verification_status": {
+            "type": "string",
+            "enum": ["unverified", "verified", "rejected"]
+          },
+          "allowed_for_evidence_map": { "type": "boolean" },
+          "allowed_for_claims": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

@@ -34,6 +34,24 @@ Reject:
 - contribution is only engineering glue
 - method needs unfair baselines to win
 
+## Gate B2: Literature Source Trust
+
+Pass:
+
+- every underlying source is recorded in `10_literature/source_manifest.yaml`
+- NotebookLM imports are recorded in `10_literature/notebooklm_manifest.yaml`
+- every NotebookLM export is recorded in `10_literature/notebooklm_exports/export_index.yaml`
+- rights status and citation status are explicit
+- NotebookLM-derived notes are verified against underlying sources before entering `evidence_map.md`
+
+Reject:
+
+- NotebookLM export is used directly as supported claim evidence
+- source IDs in NotebookLM records do not exist in `source_manifest.yaml`
+- citation status is missing or vague
+- stale NotebookLM imports are treated as current evidence
+- rights status is unknown for sources intended for publication-critical claims
+
 ## Gate C: Implementation Trust
 
 Pass:
@@ -82,4 +100,3 @@ Reject:
 - claim exceeds experiment scope
 - inconclusive result written as supported
 - citation is missing or irrelevant
-

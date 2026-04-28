@@ -46,7 +46,7 @@ Advance one state transition per work session when possible. Avoid asking Codex 
 
 ## NotebookLM Checkpoints
 
-- P1: create or link a NotebookLM notebook, ingest verified literature sources, and record IDs in `10_literature/notebooklm_manifest.yaml`.
+- P1: create or link a NotebookLM notebook, record canonical sources in `source_manifest.yaml`, ingest verified literature sources, and record NotebookLM imports in `notebooklm_manifest.yaml`.
 - P3: query the notebook for novelty and baseline risks, then verify against underlying sources.
 - P5: use NotebookLM only to audit written summaries against sources; use repository logs and metrics for experimental truth.
 - P7: draft only from `claims.yaml`, `result_summary.md`, and source-grounded literature notes.

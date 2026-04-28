@@ -24,8 +24,10 @@ REQUIRED_FILES = [
     "10_literature/paper_table.csv",
     "10_literature/evidence_map.md",
     "10_literature/bibtex.bib",
+    "10_literature/source_manifest.yaml",
     "10_literature/notebooklm_manifest.yaml",
     "10_literature/notebooklm_exports/README.md",
+    "10_literature/notebooklm_exports/export_index.yaml",
     "20_ideas/idea_pool.json",
     "20_ideas/idea_scores.md",
     "20_ideas/rejected_ideas.md",
@@ -94,12 +96,66 @@ BASELINE_REQUIRED = [
 NOTEBOOKLM_REQUIRED = [
     "notebook",
     "interface_policy",
-    "source_registry",
+    "imported_sources",
     "export_policy",
     "sync_policy",
     "allowed_uses",
     "prohibited_uses",
 ]
+
+SOURCE_MANIFEST_REQUIRED = [
+    "sources",
+]
+
+EXPORT_INDEX_REQUIRED = [
+    "exports",
+]
+
+SOURCE_TYPE_VALUES = {
+    "paper",
+    "official_repo",
+    "benchmark_doc",
+    "dataset_doc",
+    "official_doc",
+    "web_url",
+    "youtube",
+    "google_drive",
+    "local_file",
+    "human_note",
+    "other",
+}
+
+CITATION_STATUS_VALUES = {
+    "unverified",
+    "verified",
+    "rejected",
+}
+
+RIGHTS_STATUS_VALUES = {
+    "unknown",
+    "permitted",
+    "restricted",
+    "public",
+    "internal_only",
+}
+
+IMPORT_TYPE_VALUES = {
+    "url",
+    "drive",
+    "text",
+    "file",
+    "youtube",
+    "audio",
+    "other",
+}
+
+IMPORT_STATUS_VALUES = {
+    "pending",
+    "imported",
+    "stale",
+    "removed",
+    "failed",
+}
 
 STRUCTURED_SUFFIXES = {
     ".py",
@@ -214,6 +270,26 @@ def evidence_path_exists(project: Path, value: str) -> bool:
     return (project / path_text).exists()
 
 
+def load_source_ids(project: Path) -> set[str]:
+    source_manifest = project / "10_literature" / "source_manifest.yaml"
+    if not source_manifest.exists():
+        return set()
+    data = load_yaml(source_manifest)
+    if not isinstance(data, dict) or not isinstance(data.get("sources"), list):
+        return set()
+    return {
+        str(source.get("source_id"))
+        for source in data["sources"]
+        if isinstance(source, dict) and source.get("source_id")
+    }
+
+
+def check_enum(path: Path, label: str, value: Any, allowed: set[str]) -> list[str]:
+    if value not in allowed:
+        return [f"{display_path(path)}: {label} has invalid value '{value}'"]
+    return []
+
+
 def validate_claims(project: Path, claims_path: Path) -> list[str]:
     errors: list[str] = []
     claims = load_yaml(claims_path)
@@ -236,8 +312,58 @@ def validate_claims(project: Path, claims_path: Path) -> list[str]:
             errors.append(f"{display_path(claims_path)}: {status} claim {label} lacks reason")
 
         for item in normalize_evidence_value(evidence):
+            normalized = item.replace("\\", "/")
+            if status == "supported" and "10_literature/notebooklm_exports/" in normalized:
+                errors.append(
+                    f"{display_path(claims_path)}: supported claim {label} cites NotebookLM export directly: {item}"
+                )
             if is_local_evidence_path(item) and not evidence_path_exists(project, item):
                 errors.append(f"{display_path(claims_path)}: claim {label} evidence path missing: {item}")
+
+    return errors
+
+
+def validate_source_manifest(project: Path, source_path: Path) -> list[str]:
+    errors: list[str] = []
+    manifest = load_yaml(source_path)
+    errors.extend(check_required_keys(display_path(source_path), manifest, SOURCE_MANIFEST_REQUIRED))
+
+    if not isinstance(manifest, dict):
+        return errors
+
+    sources = manifest.get("sources")
+    if not isinstance(sources, list):
+        return [*errors, f"{display_path(source_path)}: sources must be a list"]
+
+    seen: set[str] = set()
+    for index, source in enumerate(sources, start=1):
+        if not isinstance(source, dict):
+            errors.append(f"{display_path(source_path)}: source {index} is not a mapping")
+            continue
+        label = f"{display_path(source_path)} source {index}"
+        errors.extend(
+            check_required_keys(
+                label,
+                source,
+                ["source_id", "title", "source_type", "locator", "rights_status", "citation_status"],
+            )
+        )
+        source_id = str(source.get("source_id", ""))
+        if source_id in seen:
+            errors.append(f"{display_path(source_path)}: duplicate source_id '{source_id}'")
+        seen.add(source_id)
+        errors.extend(check_enum(source_path, f"{source_id}.source_type", source.get("source_type"), SOURCE_TYPE_VALUES))
+        errors.extend(
+            check_enum(
+                source_path,
+                f"{source_id}.citation_status",
+                source.get("citation_status"),
+                CITATION_STATUS_VALUES,
+            )
+        )
+        errors.extend(
+            check_enum(source_path, f"{source_id}.rights_status", source.get("rights_status"), RIGHTS_STATUS_VALUES)
+        )
 
     return errors
 
@@ -246,6 +372,7 @@ def validate_notebooklm_manifest(project: Path, manifest_path: Path) -> list[str
     errors: list[str] = []
     manifest = load_yaml(manifest_path)
     errors.extend(check_required_keys(display_path(manifest_path), manifest, NOTEBOOKLM_REQUIRED))
+    source_ids = load_source_ids(project)
 
     if not isinstance(manifest, dict):
         return errors
@@ -264,21 +391,110 @@ def validate_notebooklm_manifest(project: Path, manifest_path: Path) -> list[str
     else:
         errors.append(f"{display_path(manifest_path)}: export_policy must be a mapping")
 
-    source_registry = manifest.get("source_registry")
-    if not isinstance(source_registry, list):
-        errors.append(f"{display_path(manifest_path)}: source_registry must be a list")
+    imported_sources = manifest.get("imported_sources")
+    if not isinstance(imported_sources, list):
+        errors.append(f"{display_path(manifest_path)}: imported_sources must be a list")
     else:
-        for index, source in enumerate(source_registry, start=1):
+        for index, source in enumerate(imported_sources, start=1):
             if not isinstance(source, dict):
-                errors.append(f"{display_path(manifest_path)}: source_registry item {index} is not a mapping")
+                errors.append(f"{display_path(manifest_path)}: imported_sources item {index} is not a mapping")
                 continue
+            source_id = str(source.get("source_id", ""))
             errors.extend(
                 check_required_keys(
-                    f"{display_path(manifest_path)} source_registry item {index}",
+                    f"{display_path(manifest_path)} imported_sources item {index}",
                     source,
-                    ["source_id", "title", "source_type", "citation_status"],
+                    [
+                        "notebooklm_source_id",
+                        "source_id",
+                        "source_type",
+                        "import_type",
+                        "import_status",
+                        "citation_status",
+                        "rights_status",
+                    ],
                 )
             )
+            if source_ids and source_id not in source_ids:
+                errors.append(f"{display_path(manifest_path)}: imported source_id not in source_manifest.yaml: {source_id}")
+            errors.extend(
+                check_enum(manifest_path, f"{source_id}.source_type", source.get("source_type"), SOURCE_TYPE_VALUES)
+            )
+            errors.extend(
+                check_enum(manifest_path, f"{source_id}.import_type", source.get("import_type"), IMPORT_TYPE_VALUES)
+            )
+            errors.extend(
+                check_enum(manifest_path, f"{source_id}.import_status", source.get("import_status"), IMPORT_STATUS_VALUES)
+            )
+            errors.extend(
+                check_enum(
+                    manifest_path,
+                    f"{source_id}.citation_status",
+                    source.get("citation_status"),
+                    CITATION_STATUS_VALUES,
+                )
+            )
+            errors.extend(
+                check_enum(manifest_path, f"{source_id}.rights_status", source.get("rights_status"), RIGHTS_STATUS_VALUES)
+            )
+
+    return errors
+
+
+def validate_notebooklm_export_index(project: Path, index_path: Path) -> list[str]:
+    errors: list[str] = []
+    index = load_yaml(index_path)
+    errors.extend(check_required_keys(display_path(index_path), index, EXPORT_INDEX_REQUIRED))
+    source_ids = load_source_ids(project)
+
+    if not isinstance(index, dict):
+        return errors
+
+    exports = index.get("exports")
+    if not isinstance(exports, list):
+        return [*errors, f"{display_path(index_path)}: exports must be a list"]
+
+    for item_index, export in enumerate(exports, start=1):
+        if not isinstance(export, dict):
+            errors.append(f"{display_path(index_path)}: export {item_index} is not a mapping")
+            continue
+        export_id = str(export.get("export_id", item_index))
+        errors.extend(
+            check_required_keys(
+                f"{display_path(index_path)} export {export_id}",
+                export,
+                [
+                    "export_id",
+                    "notebook_id",
+                    "query",
+                    "source_ids",
+                    "output_path",
+                    "verification_status",
+                    "allowed_for_evidence_map",
+                    "allowed_for_claims",
+                ],
+            )
+        )
+        errors.extend(
+            check_enum(
+                index_path,
+                f"{export_id}.verification_status",
+                export.get("verification_status"),
+                CITATION_STATUS_VALUES,
+            )
+        )
+        if export.get("allowed_for_claims") is True:
+            errors.append(f"{display_path(index_path)}: export {export_id} must not be allowed_for_claims")
+        listed_source_ids = export.get("source_ids")
+        if not isinstance(listed_source_ids, list):
+            errors.append(f"{display_path(index_path)}: export {export_id} source_ids must be a list")
+        else:
+            for source_id in listed_source_ids:
+                if source_ids and source_id not in source_ids:
+                    errors.append(f"{display_path(index_path)}: export {export_id} unknown source_id: {source_id}")
+        output_path = export.get("output_path")
+        if isinstance(output_path, str) and output_path not in {"", "TBD"} and not (project / output_path).exists():
+            errors.append(f"{display_path(index_path)}: export {export_id} output_path missing: {output_path}")
 
     return errors
 
@@ -318,12 +534,26 @@ def validate_project(project: Path) -> list[str]:
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{display_path(claims_path)}: {exc}")
 
+    source_manifest_path = project / "10_literature" / "source_manifest.yaml"
+    if source_manifest_path.exists():
+        try:
+            errors.extend(validate_source_manifest(project, source_manifest_path))
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{display_path(source_manifest_path)}: {exc}")
+
     notebooklm_path = project / "10_literature" / "notebooklm_manifest.yaml"
     if notebooklm_path.exists():
         try:
             errors.extend(validate_notebooklm_manifest(project, notebooklm_path))
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{display_path(notebooklm_path)}: {exc}")
+
+    export_index_path = project / "10_literature" / "notebooklm_exports" / "export_index.yaml"
+    if export_index_path.exists():
+        try:
+            errors.extend(validate_notebooklm_export_index(project, export_index_path))
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{display_path(export_index_path)}: {exc}")
 
     return errors
 

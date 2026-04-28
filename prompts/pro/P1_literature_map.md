@@ -16,6 +16,7 @@
 
 ```text
 [粘贴 research_spec.yaml]
+[粘贴 source_manifest.yaml，如已有]
 [粘贴 notebooklm_manifest.yaml，如已有]
 [粘贴 NotebookLM 导出的 source-grounded notes，如已有]
 ```
@@ -30,8 +31,9 @@
 6. 尚未解决的问题。
 7. 可能的新颖性空隙。
 8. `evidence_map.md` 草案。
-9. `notebooklm_manifest.yaml` 更新建议：哪些 sources 应加入、哪些需要验证、哪些不应使用。
-10. `rejected directions`：看似可行但不值得做的方向。
+9. `source_manifest.yaml` 更新建议：哪些底层 sources 应加入、哪些需要验证、哪些不应使用。
+10. `notebooklm_manifest.yaml` 和 `export_index.yaml` 更新建议。
+11. `rejected directions`：看似可行但不值得做的方向。
 
 NotebookLM 规则：
 

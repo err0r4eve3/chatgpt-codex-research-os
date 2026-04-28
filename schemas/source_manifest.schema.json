@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "source_manifest",
+  "type": "object",
+  "required": ["sources"],
+  "properties": {
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "title",
+          "source_type",
+          "locator",
+          "rights_status",
+          "citation_status"
+        ],
+        "properties": {
+          "source_id": { "type": "string" },
+          "title": { "type": "string" },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "official_repo",
+              "benchmark_doc",
+              "dataset_doc",
+              "official_doc",
+              "web_url",
+              "youtube",
+              "google_drive",
+              "local_file",
+              "human_note",
+              "other"
+            ]
+          },
+          "locator": { "type": "string" },
+          "version_or_date": { "type": "string" },
+          "rights_status": {
+            "type": "string",
+            "enum": ["unknown", "permitted", "restricted", "public", "internal_only"]
+          },
+          "citation_status": {
+            "type": "string",
+            "enum": ["unverified", "verified", "rejected"]
+          },
+          "source_of_truth": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

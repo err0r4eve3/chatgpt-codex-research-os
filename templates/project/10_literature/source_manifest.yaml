@@ -1,0 +1,13 @@
+sources:
+  - source_id: "SRC-TBD"
+    title: "TBD"
+    source_type: "other"
+    locator: "TBD"
+    version_or_date: "TBD"
+    rights_status: "unknown"
+    citation_status: "unverified"
+    added_on: "TBD"
+    added_by: "human"
+    source_of_truth: true
+    notes: "Replace this placeholder with papers, official repositories, benchmark docs, dataset docs, or official product docs."
+

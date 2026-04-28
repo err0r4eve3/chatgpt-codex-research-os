@@ -29,6 +29,7 @@ P9 human final decision
 - Research boundary: `00_intake/`
 - Literature evidence: `10_literature/`
 - NotebookLM literature memory: `10_literature/notebooklm_manifest.yaml`
+- Canonical source registry: `10_literature/source_manifest.yaml`
 - Idea selection: `20_ideas/`
 - Experiment contract: `30_specs/`
 - Engineering work: `40_code/repo/`

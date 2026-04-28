@@ -16,6 +16,9 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Validate template
         run: python scripts/validate_artifacts.py --template
+      - name: Create smoke project
+        run: python scripts/new_project.py 2026-04-smoke-test --force
+      - name: Validate smoke project
+        run: python scripts/validate_artifacts.py --project projects/2026-04-smoke-test
       - name: Validate projects
         run: python scripts/validate_artifacts.py --all
-

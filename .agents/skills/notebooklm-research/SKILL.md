@@ -27,11 +27,17 @@ For local repository edits that only document or validate NotebookLM workflow, d
 Each project should contain:
 
 ```text
+10_literature/source_manifest.yaml
 10_literature/notebooklm_manifest.yaml
 10_literature/notebooklm_exports/README.md
+10_literature/notebooklm_exports/export_index.yaml
 ```
 
-The manifest records notebook ID, title, CLI alias, source registry, export policy, sync policy, allowed uses, and prohibited uses.
+`source_manifest.yaml` records canonical underlying sources.
+
+`notebooklm_manifest.yaml` records NotebookLM notebook ID, title, CLI alias, import state, export policy, sync policy, allowed uses, and prohibited uses.
+
+`export_index.yaml` records every NotebookLM answer, summary, or export used during research.
 
 ## Standard CLI Commands
 
@@ -70,13 +76,15 @@ Do not use `nlm chat start` from Codex because it opens an interactive REPL.
 ## Evidence Rules
 
 - Record every imported source in `notebooklm_manifest.yaml`.
+- Record every canonical source in `source_manifest.yaml`.
 - Export useful summaries to `10_literature/notebooklm_exports/`.
+- Record every export in `10_literature/notebooklm_exports/export_index.yaml`.
 - Move only verified facts into `evidence_map.md`.
 - Cite the underlying paper, benchmark, official repository, or official docs.
 - Never cite a NotebookLM answer as the final source for a paper claim.
+- Never cite a NotebookLM export directly as supported `claims.yaml` evidence.
 - Do not put auth tokens, cookies, credentials, or sensitive data in the repository.
 
 ## Deletion Safety
 
 NotebookLM delete operations are irreversible. Do not delete notebooks, sources, notes, or generated artifacts unless the user explicitly confirms the exact item and scope.
-

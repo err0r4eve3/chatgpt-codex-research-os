@@ -5,7 +5,7 @@
   "required": [
     "notebook",
     "interface_policy",
-    "source_registry",
+    "imported_sources",
     "export_policy",
     "sync_policy",
     "allowed_uses",
@@ -28,17 +28,65 @@
       "required": ["preferred_for_cli", "preferred_for_mcp"],
       "additionalProperties": true
     },
-    "source_registry": {
+    "imported_sources": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["source_id", "title", "source_type", "citation_status"],
+        "required": [
+          "notebooklm_source_id",
+          "source_id",
+          "source_type",
+          "import_type",
+          "import_status",
+          "citation_status",
+          "rights_status"
+        ],
+        "properties": {
+          "notebooklm_source_id": { "type": "string" },
+          "source_id": { "type": "string" },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "paper",
+              "official_repo",
+              "benchmark_doc",
+              "dataset_doc",
+              "official_doc",
+              "web_url",
+              "youtube",
+              "google_drive",
+              "local_file",
+              "human_note",
+              "other"
+            ]
+          },
+          "import_type": {
+            "type": "string",
+            "enum": ["url", "drive", "text", "file", "youtube", "audio", "other"]
+          },
+          "import_status": {
+            "type": "string",
+            "enum": ["pending", "imported", "stale", "removed", "failed"]
+          },
+          "citation_status": {
+            "type": "string",
+            "enum": ["unverified", "verified", "rejected"]
+          },
+          "rights_status": {
+            "type": "string",
+            "enum": ["unknown", "permitted", "restricted", "public", "internal_only"]
+          },
+          "export_paths": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
         "additionalProperties": true
       }
     },
     "export_policy": {
       "type": "object",
-      "required": ["directory"],
+      "required": ["directory", "index"],
       "additionalProperties": true
     },
     "sync_policy": {

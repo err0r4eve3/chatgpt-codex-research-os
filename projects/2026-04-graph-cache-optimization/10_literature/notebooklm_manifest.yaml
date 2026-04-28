@@ -15,23 +15,27 @@ interface_policy:
     - "batch queries when MCP tools are available"
   ask_when_both_available: true
 
-source_registry:
-  - source_id: "TBD"
-    title: "TBD"
-    source_type: "paper | url | drive | text"
-    url_or_reference: "TBD"
-    added_by: "human"
-    added_on: "TBD"
+imported_sources:
+  - notebooklm_source_id: "TBD"
+    source_id: "SRC-TBD"
+    source_type: "other"
+    import_type: "text"
+    import_status: "pending"
     citation_status: "unverified"
-    notes: "Replace this placeholder after adding real sources."
+    rights_status: "unknown"
+    imported_on: "TBD"
+    last_synced: "TBD"
+    export_paths: []
+    notes: "Canonical source metadata belongs in source_manifest.yaml."
 
 export_policy:
   directory: "10_literature/notebooklm_exports"
+  index: "10_literature/notebooklm_exports/export_index.yaml"
   allowed_formats:
     - "markdown"
     - "text"
     - "json"
-  rule: "Exports are leads for evidence_map.md, not final citations."
+  rule: "Exports are leads for evidence_map.md, not final citations or claims.yaml evidence."
 
 sync_policy:
   record_every_import: true
@@ -51,4 +55,5 @@ prohibited_uses:
   - "Do not replace repository code inspection."
   - "Do not replace experiment logs, metrics, or statistical tests."
   - "Do not create manuscript claims outside claims.yaml."
+  - "Do not cite NotebookLM exports directly as supported claim evidence."
 

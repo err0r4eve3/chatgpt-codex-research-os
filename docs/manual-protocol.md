@@ -20,11 +20,12 @@ Use this loop during literature-heavy stages:
 
 ```text
 1. Human or Codex adds verified sources to NotebookLM.
-2. Source IDs are recorded in notebooklm_manifest.yaml.
-3. Pro asks focused source-grounded questions.
-4. Human or Codex exports useful summaries to notebooklm_exports/.
-5. Findings are checked against underlying sources.
-6. Verified facts move into evidence_map.md or paper_table.csv.
+2. Canonical source IDs are recorded in source_manifest.yaml.
+3. NotebookLM import IDs are recorded in notebooklm_manifest.yaml.
+4. Pro asks focused source-grounded questions.
+5. Human or Codex exports useful summaries to notebooklm_exports/ and records them in export_index.yaml.
+6. Findings are checked against underlying sources.
+7. Verified facts move into evidence_map.md or paper_table.csv.
 ```
 
 NotebookLM output should not skip the evidence gate. Treat it as organized memory and source Q&A, not as final authority.

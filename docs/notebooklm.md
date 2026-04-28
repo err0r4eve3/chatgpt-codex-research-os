@@ -103,3 +103,4 @@ Which limitations would a skeptical reviewer raise?
 - Do not delete notebooks, sources, or artifacts without explicit confirmation.
 - Do not run generation commands that require `--confirm` unless the user explicitly asked for that artifact.
 
+See `docs/notebooklm-protocol.md` for source limits, sync rules, privacy boundaries, and citation rules.

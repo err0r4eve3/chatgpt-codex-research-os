@@ -87,7 +87,7 @@ P9 human final decision
 - `50_runs/` stores real execution records.
 - `70_claims/claims.yaml` is the authority for what may appear in the paper.
 - `80_manuscript/` is generated from evidence, not used as a source of truth.
-- NotebookLM is used for source-centered literature memory via `10_literature/notebooklm_manifest.yaml`; its summaries must be verified against underlying sources.
+- NotebookLM is used for source-centered literature memory via `10_literature/source_manifest.yaml`, `notebooklm_manifest.yaml`, and `notebooklm_exports/export_index.yaml`; exports must be verified against underlying sources and cannot directly support `claims.yaml`.
 
 ## Minimum Viable Use
 

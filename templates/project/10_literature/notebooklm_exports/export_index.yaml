@@ -1,0 +1,15 @@
+exports:
+  - export_id: "NLM-EXP-TBD"
+    notebook_id: "TBD"
+    query: "TBD"
+    source_ids:
+      - "SRC-TBD"
+    notebooklm_source_ids:
+      - "TBD"
+    output_path: "TBD"
+    created_on: "TBD"
+    verification_status: "unverified"
+    allowed_for_evidence_map: false
+    allowed_for_claims: false
+    notes: "NotebookLM exports must be verified against source_manifest.yaml before entering evidence_map.md."
+

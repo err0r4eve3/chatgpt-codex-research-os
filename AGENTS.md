@@ -53,7 +53,10 @@ python scripts/validate_artifacts.py --all
 - Do not delete failed runs or negative results.
 - Keep literature evidence in `10_literature/`; keep implementation outputs in `50_runs/`; keep conclusions in `70_claims/`.
 - Use NotebookLM only as source-centered research memory. Verify NotebookLM answers against underlying sources before adding facts or claims.
-- Keep NotebookLM notebook IDs, source IDs, aliases, and exports in `10_literature/notebooklm_manifest.yaml` and `10_literature/notebooklm_exports/`.
+- Keep canonical source records in `10_literature/source_manifest.yaml`.
+- Keep NotebookLM notebook IDs, import state, aliases, and sync metadata in `10_literature/notebooklm_manifest.yaml`.
+- Keep NotebookLM output audit records in `10_literature/notebooklm_exports/export_index.yaml`.
+- Do not cite NotebookLM exports directly as supported claim evidence.
 - Prefer small, reviewable stage transitions over broad rewrites.
 
 ## Engineering Rules

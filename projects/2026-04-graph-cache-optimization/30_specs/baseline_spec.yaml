@@ -1,0 +1,13 @@
+baselines:
+  - name: "baseline_a"
+    source: "TBD"
+    version_or_commit: "TBD"
+    implementation_path: "TBD"
+    fairness_requirements:
+      - "same input preprocessing"
+      - "same compiler or runtime flags where applicable"
+      - "same hardware assumptions"
+      - "same metrics schema"
+    known_limitations:
+      - "TBD"
+

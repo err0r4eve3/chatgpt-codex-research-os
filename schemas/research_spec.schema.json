@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "research_spec",
+  "type": "object",
+  "required": [
+    "project_id",
+    "field",
+    "target_venue_type",
+    "research_question",
+    "hypothesis",
+    "contribution_type",
+    "non_goals",
+    "success_criteria",
+    "human_owner_decisions"
+  ],
+  "properties": {
+    "project_id": { "type": "string" },
+    "field": { "type": "string" },
+    "target_venue_type": { "type": "string" },
+    "research_question": { "type": "string" },
+    "hypothesis": { "type": ["object", "array"] },
+    "contribution_type": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "success_criteria": { "type": "object" },
+    "human_owner_decisions": { "type": "object" }
+  },
+  "additionalProperties": true
+}
+

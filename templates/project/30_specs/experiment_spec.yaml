@@ -1,0 +1,40 @@
+experiment_id: "exp_main_001"
+
+datasets:
+  - name: "dataset_a"
+    source: "official or local"
+    version: "fixed"
+    split: "documented"
+
+baselines:
+  - name: "baseline_a"
+    repo_or_impl: "local or official"
+    fairness_notes: "same input, budget, hardware, and metrics"
+
+method_under_test:
+  name: "method_under_test"
+  implementation_path: "TBD"
+
+metrics:
+  primary:
+    - "TBD"
+  secondary:
+    - "runtime"
+    - "memory_usage"
+
+controls:
+  seeds: [1, 2, 3]
+  hardware_record_required: true
+  environment_record_required: true
+
+run_matrix:
+  datasets: ["dataset_a"]
+  methods: ["baseline_a", "method_under_test"]
+  seeds: [1, 2, 3]
+
+acceptance_checks:
+  - "All methods use identical input preprocessing."
+  - "All failed runs are logged, not silently dropped."
+  - "No metric is reported without command and config."
+  - "Plots are generated from metrics.json, not manually entered."
+

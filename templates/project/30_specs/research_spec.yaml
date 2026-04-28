@@ -1,0 +1,32 @@
+project_id: "__PROJECT_ID__"
+field: "TBD"
+target_venue_type: "TBD"
+research_question: >
+  TBD
+
+hypothesis:
+  h1: "TBD"
+
+contribution_type:
+  - "TBD"
+
+non_goals:
+  - "Do not claim universal SOTA."
+  - "Do not compare against methods we cannot reproduce."
+  - "Do not optimize only for one dataset."
+
+success_criteria:
+  primary_metric: "TBD"
+  secondary_metrics:
+    - "TBD"
+  minimum_evidence:
+    - ">= 2 baselines"
+    - ">= 3 datasets or justified benchmark variants"
+    - ">= 3 random seeds or repeated runs when stochastic"
+    - "ablation for each core component"
+
+human_owner_decisions:
+  selected_by: "user"
+  date: "TBD"
+  approved_to_implement: false
+

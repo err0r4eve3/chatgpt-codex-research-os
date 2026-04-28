@@ -1,0 +1,6 @@
+experiment_id: "smoke_001"
+method: "method_under_test"
+dataset: "toy"
+seed: 1
+output_dir: "results/smoke_001/method_under_test/toy/1"
+

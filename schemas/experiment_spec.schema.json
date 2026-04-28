@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "experiment_spec",
+  "type": "object",
+  "required": [
+    "experiment_id",
+    "datasets",
+    "baselines",
+    "method_under_test",
+    "metrics",
+    "controls",
+    "run_matrix",
+    "acceptance_checks"
+  ],
+  "properties": {
+    "experiment_id": { "type": "string" },
+    "datasets": { "type": "array" },
+    "baselines": { "type": "array" },
+    "method_under_test": { "type": "object" },
+    "metrics": { "type": "object" },
+    "controls": { "type": "object" },
+    "run_matrix": { "type": "object" },
+    "acceptance_checks": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}
+

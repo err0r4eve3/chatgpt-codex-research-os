@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts inside research code repositories
+projects/*/40_code/repo/build/
+projects/*/40_code/repo/cmake-build-*/
+projects/*/40_code/repo/.cache/
+projects/*/40_code/repo/results/**
+!projects/*/40_code/repo/results/.gitkeep
+
+# Large local-only raw artifacts. Keep audited summaries and selected logs intentionally.
+projects/*/50_runs/**/raw/
+projects/*/99_archive/local_only/

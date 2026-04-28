@@ -12,6 +12,7 @@ import json
 import platform
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,16 @@ def load_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"expected mapping config: {path}")
     return data
+
+
+def write_yaml(path: Path, data: dict[str, Any]) -> None:
+    try:
+        import yaml  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError("PyYAML is required. Install with: python -m pip install -r requirements-dev.txt") from exc
+
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        yaml.safe_dump(data, handle, sort_keys=False)
 
 
 def git_commit() -> str:
@@ -62,6 +73,7 @@ def environment_text() -> str:
 
 
 def main() -> int:
+    started_at = datetime.now(timezone.utc).isoformat()
     args = parse_args()
     config_path = Path(args.config)
     config = load_yaml(config_path)
@@ -72,25 +84,40 @@ def main() -> int:
     commit = git_commit()
     command = command_line()
     run_id = str(config.get("experiment_id", "smoke_001"))
+    experiment_id = run_id
     method = str(config.get("method", "method_under_test"))
     dataset = str(config.get("dataset", "toy"))
     seed = int(config.get("seed", 1))
 
-    record = {
+    metrics = {
         "run_id": run_id,
-        "status": "placeholder",
-        "command": command,
-        "git_commit": commit,
+        "experiment_id": experiment_id,
         "method": method,
         "dataset": dataset,
         "seed": seed,
+        "status": "completed",
         "metrics": {
-            "placeholder_metric": 1.0,
+            "throughput": 1.0,
+            "runtime_seconds": 0.01,
         },
-        "environment": {
-            "python": sys.version.split()[0],
-            "platform": platform.platform(),
-        },
+    }
+    run_record = {
+        "run_id": run_id,
+        "experiment_id": experiment_id,
+        "method": method,
+        "dataset": dataset,
+        "seed": seed,
+        "status": "completed",
+        "command": command,
+        "config_path": "run_config.yaml",
+        "metrics_path": "metrics.json",
+        "stdout_path": "stdout.log",
+        "stderr_path": "stderr.log",
+        "git_commit": commit,
+        "environment_path": "environment.txt",
+        "started_at": started_at,
+        "finished_at": datetime.now(timezone.utc).isoformat(),
+        "failure_reason": "",
     }
 
     (output_dir / "command.sh").write_text(command + "\n", encoding="utf-8", newline="\n")
@@ -99,7 +126,8 @@ def main() -> int:
     (output_dir / "run_config.yaml").write_text(config_path.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
     (output_dir / "git_commit.txt").write_text(commit + "\n", encoding="utf-8", newline="\n")
     (output_dir / "environment.txt").write_text(environment_text(), encoding="utf-8", newline="\n")
-    (output_dir / "metrics.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (output_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8", newline="\n")
+    write_yaml(output_dir / "run_record.yaml", run_record)
 
     print(f"wrote {output_dir}")
     return 0
@@ -107,4 +135,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

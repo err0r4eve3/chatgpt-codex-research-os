@@ -36,7 +36,8 @@
             "enum": ["unverified", "verified", "rejected"]
           },
           "allowed_for_evidence_map": { "type": "boolean" },
-          "allowed_for_claims": { "type": "boolean" }
+          "allowed_for_claims": { "const": false },
+          "publication_critical": { "type": "boolean" }
         },
         "additionalProperties": true
       }
@@ -44,4 +45,3 @@
   },
   "additionalProperties": true
 }
-

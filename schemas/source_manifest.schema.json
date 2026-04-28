@@ -39,13 +39,25 @@
           "version_or_date": { "type": "string" },
           "rights_status": {
             "type": "string",
-            "enum": ["unknown", "permitted", "restricted", "public", "internal_only"]
+            "enum": [
+              "open_access",
+              "owned",
+              "licensed",
+              "unknown",
+              "permitted",
+              "restricted",
+              "public",
+              "internal_only",
+              "do_not_upload"
+            ]
           },
           "citation_status": {
             "type": "string",
             "enum": ["unverified", "verified", "rejected"]
           },
-          "source_of_truth": { "type": "boolean" }
+          "source_of_truth": { "type": "boolean" },
+          "publication_critical": { "type": "boolean" },
+          "publication_approved_by_human": { "type": "boolean" }
         },
         "additionalProperties": true
       }
@@ -53,4 +65,3 @@
   },
   "additionalProperties": true
 }
-

@@ -5,14 +5,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterable
+
+try:
+    from jsonschema import Draft202012Validator
+except ImportError:  # pragma: no cover - reported as a validation error.
+    Draft202012Validator = None  # type: ignore[assignment]
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECTS = ROOT / "projects"
 TEMPLATE = ROOT / "templates" / "project"
+SCHEMAS = ROOT / "schemas"
 
 REQUIRED_FILES = [
     "README.md",
@@ -132,11 +139,15 @@ CITATION_STATUS_VALUES = {
 }
 
 RIGHTS_STATUS_VALUES = {
+    "open_access",
+    "owned",
+    "licensed",
     "unknown",
     "permitted",
     "restricted",
     "public",
     "internal_only",
+    "do_not_upload",
 }
 
 IMPORT_TYPE_VALUES = {
@@ -173,6 +184,23 @@ STRUCTURED_NAMES = {
     "requirements-dev.txt",
 }
 
+DATA_SUFFIXES = {".yaml", ".yml", ".json"}
+
+PROJECT_SCHEMA_FILES = {
+    "10_literature/source_manifest.yaml": "source_manifest.schema.json",
+    "10_literature/notebooklm_manifest.yaml": "notebooklm_manifest.schema.json",
+    "10_literature/notebooklm_exports/export_index.yaml": "notebooklm_export_index.schema.json",
+    "30_specs/research_spec.yaml": "research_spec.schema.json",
+    "30_specs/experiment_spec.yaml": "experiment_spec.schema.json",
+    "30_specs/baseline_spec.yaml": "baseline_spec.schema.json",
+    "70_claims/claims.yaml": "claims.schema.json",
+}
+
+RUN_RECORD_SCHEMA = "run_record.schema.json"
+RISKY_NOTEBOOKLM_RIGHTS = {"restricted", "internal_only", "do_not_upload"}
+PUBLICATION_RISK_RIGHTS = {"unknown", "restricted", "internal_only", "do_not_upload"}
+CLAIM_ID_RE = re.compile(r"CLAIM:([A-Za-z0-9_.:-]+)")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate Research OS project artifacts.")
@@ -195,6 +223,11 @@ def load_yaml(path: Path) -> Any:
         return yaml.safe_load(handle) or {}
 
 
+def load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
 def display_path(path: Path) -> str:
     try:
         return str(path.relative_to(ROOT)).replace("\\", "/")
@@ -206,6 +239,52 @@ def check_required_keys(name: str, data: Any, required: list[str]) -> list[str]:
     if not isinstance(data, dict):
         return [f"{name}: expected mapping"]
     return [f"{name}: missing key '{key}'" for key in required if key not in data]
+
+
+def validate_schema_files() -> list[str]:
+    errors: list[str] = []
+    if Draft202012Validator is None:
+        return ["jsonschema is required. Install with: python -m pip install -r requirements-dev.txt"]
+
+    for schema_path in sorted(SCHEMAS.glob("*.schema.json")):
+        try:
+            schema = load_json(schema_path)
+            Draft202012Validator.check_schema(schema)
+        except Exception as exc:  # noqa: BLE001 - validation should report schema errors.
+            errors.append(f"{display_path(schema_path)}: invalid schema: {exc}")
+    return errors
+
+
+def load_artifact(path: Path) -> Any:
+    if path.suffix in {".yaml", ".yml"}:
+        return load_yaml(path)
+    if path.suffix == ".json":
+        return load_json(path)
+    raise ValueError(f"unsupported schema-validated artifact type: {path.suffix}")
+
+
+def validate_instance_with_schema(instance_path: Path, schema_name: str) -> list[str]:
+    if Draft202012Validator is None:
+        return ["jsonschema is required. Install with: python -m pip install -r requirements-dev.txt"]
+
+    schema_path = SCHEMAS / schema_name
+    if not schema_path.exists():
+        return [f"{display_path(instance_path)}: missing schema: {display_path(schema_path)}"]
+
+    try:
+        schema = load_json(schema_path)
+        data = load_artifact(instance_path)
+        validator = Draft202012Validator(schema)
+        validation_errors = sorted(validator.iter_errors(data), key=lambda error: list(error.path))
+    except Exception as exc:  # noqa: BLE001 - validation should report parse errors.
+        return [f"{display_path(instance_path)}: schema validation failed: {exc}"]
+
+    errors: list[str] = []
+    for error in validation_errors:
+        location = "/".join(str(part) for part in error.path)
+        suffix = f" at {location}" if location else ""
+        errors.append(f"{display_path(instance_path)}: schema validation failed{suffix}: {error.message}")
+    return errors
 
 
 def is_structured_file(path: Path) -> bool:
@@ -227,6 +306,8 @@ def check_single_line_files(root: Path) -> list[str]:
         raw = path.read_bytes()
         if not raw or b"\0" in raw:
             continue
+        if b"\r" in raw:
+            errors.append(f"{display_path(path)}: contains CR bytes; expected LF-only line endings")
         newline_count = raw.count(b"\n")
         if newline_count <= 1 and len(raw) > 200:
             errors.append(f"{display_path(path)}: suspicious single-line structured file")
@@ -241,6 +322,71 @@ def check_json(path: Path) -> list[str]:
     except json.JSONDecodeError as exc:
         return [f"{display_path(path)}: invalid JSON: {exc}"]
     return []
+
+
+def validate_structured_data_files(root: Path) -> list[str]:
+    errors: list[str] = []
+    ignored_parts = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or any(part in ignored_parts for part in path.parts):
+            continue
+        if path.suffix not in DATA_SUFFIXES:
+            continue
+        try:
+            if path.suffix == ".json":
+                load_json(path)
+            else:
+                load_yaml(path)
+        except Exception as exc:  # noqa: BLE001 - validation should report parse errors.
+            errors.append(f"{display_path(path)}: structured data parse failed: {exc}")
+    return errors
+
+
+def validate_gitattributes() -> list[str]:
+    path = ROOT / ".gitattributes"
+    required_lines = {
+        "* text=auto eol=lf",
+        "*.py text eol=lf",
+        "*.md text eol=lf",
+        "*.yaml text eol=lf",
+        "*.yml text eol=lf",
+        "*.json text eol=lf",
+        "*.tex text eol=lf",
+        "Makefile text eol=lf",
+    }
+    if not path.exists():
+        return ["missing .gitattributes"]
+    lines = {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+    return [f".gitattributes: missing line: {line}" for line in sorted(required_lines - lines)]
+
+
+def validate_github_actions() -> list[str]:
+    path = ROOT / ".github" / "workflows" / "validate.yml"
+    required_fragments = [
+        "python -m py_compile",
+        "python scripts/check_line_endings.py",
+        "python scripts/validate_artifacts.py --template",
+        "python scripts/new_project.py 2026-04-smoke-test --force",
+        "python scripts/validate_artifacts.py --project projects/2026-04-smoke-test",
+        "make test",
+        "make smoke",
+        "make aggregate",
+        "python scripts/validate_artifacts.py --all",
+    ]
+    if not path.exists():
+        return ["missing .github/workflows/validate.yml"]
+    text = path.read_text(encoding="utf-8")
+    return [f"{display_path(path)}: missing workflow command fragment: {fragment}" for fragment in required_fragments if fragment not in text]
+
+
+def validate_repository_files() -> list[str]:
+    errors: list[str] = []
+    errors.extend(check_single_line_files(ROOT))
+    errors.extend(validate_structured_data_files(ROOT))
+    errors.extend(validate_gitattributes())
+    errors.extend(validate_github_actions())
+    errors.extend(validate_schema_files())
+    return errors
 
 
 def normalize_evidence_value(value: Any) -> Iterable[str]:
@@ -270,18 +416,38 @@ def evidence_path_exists(project: Path, value: str) -> bool:
     return (project / path_text).exists()
 
 
-def load_source_ids(project: Path) -> set[str]:
+def load_source_registry(project: Path) -> dict[str, dict[str, Any]]:
     source_manifest = project / "10_literature" / "source_manifest.yaml"
     if not source_manifest.exists():
-        return set()
+        return {}
     data = load_yaml(source_manifest)
     if not isinstance(data, dict) or not isinstance(data.get("sources"), list):
-        return set()
+        return {}
     return {
-        str(source.get("source_id"))
+        str(source.get("source_id")): source
         for source in data["sources"]
         if isinstance(source, dict) and source.get("source_id")
     }
+
+
+def load_source_ids(project: Path) -> set[str]:
+    return set(load_source_registry(project))
+
+
+def load_notebooklm_imports(project: Path) -> dict[str, list[dict[str, Any]]]:
+    manifest_path = project / "10_literature" / "notebooklm_manifest.yaml"
+    if not manifest_path.exists():
+        return {}
+    manifest = load_yaml(manifest_path)
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("imported_sources"), list):
+        return {}
+
+    imports: dict[str, list[dict[str, Any]]] = {}
+    for source in manifest["imported_sources"]:
+        if not isinstance(source, dict) or not source.get("source_id"):
+            continue
+        imports.setdefault(str(source["source_id"]), []).append(source)
+    return imports
 
 
 def check_enum(path: Path, label: str, value: Any, allowed: set[str]) -> list[str]:
@@ -317,6 +483,12 @@ def validate_claims(project: Path, claims_path: Path) -> list[str]:
                 errors.append(
                     f"{display_path(claims_path)}: supported claim {label} cites NotebookLM export directly: {item}"
                 )
+            if status == "supported" and normalized.lower() in {
+                "notebooklm answer",
+                "notebooklm generated summary",
+                "notebooklm summary",
+            }:
+                errors.append(f"{display_path(claims_path)}: supported claim {label} cites NotebookLM output as final evidence")
             if is_local_evidence_path(item) and not evidence_path_exists(project, item):
                 errors.append(f"{display_path(claims_path)}: claim {label} evidence path missing: {item}")
 
@@ -364,6 +536,14 @@ def validate_source_manifest(project: Path, source_path: Path) -> list[str]:
         errors.extend(
             check_enum(source_path, f"{source_id}.rights_status", source.get("rights_status"), RIGHTS_STATUS_VALUES)
         )
+        if source.get("source_of_truth") is True and source.get("citation_status") == "rejected":
+            errors.append(f"{display_path(source_path)}: source_of_truth source {source_id} has rejected citation_status")
+        if source.get("publication_critical") is True and source.get("rights_status") in PUBLICATION_RISK_RIGHTS:
+            if source.get("publication_approved_by_human") is not True:
+                errors.append(
+                    f"{display_path(source_path)}: publication-critical source {source_id} has unsafe rights_status "
+                    "without publication_approved_by_human: true"
+                )
 
     return errors
 
@@ -372,7 +552,8 @@ def validate_notebooklm_manifest(project: Path, manifest_path: Path) -> list[str
     errors: list[str] = []
     manifest = load_yaml(manifest_path)
     errors.extend(check_required_keys(display_path(manifest_path), manifest, NOTEBOOKLM_REQUIRED))
-    source_ids = load_source_ids(project)
+    source_registry = load_source_registry(project)
+    source_ids = set(source_registry)
 
     if not isinstance(manifest, dict):
         return errors
@@ -437,6 +618,23 @@ def validate_notebooklm_manifest(project: Path, manifest_path: Path) -> list[str
             errors.extend(
                 check_enum(manifest_path, f"{source_id}.rights_status", source.get("rights_status"), RIGHTS_STATUS_VALUES)
             )
+            if source.get("import_status") == "imported" and source.get("rights_status") in RISKY_NOTEBOOKLM_RIGHTS:
+                if source.get("upload_approved_by_human") is not True:
+                    errors.append(
+                        f"{display_path(manifest_path)}: imported source {source_id} has restricted rights "
+                        "without upload_approved_by_human: true"
+                    )
+            canonical = source_registry.get(source_id)
+            if canonical:
+                if canonical.get("citation_status") == "rejected" and source.get("citation_status") == "verified":
+                    errors.append(
+                        f"{display_path(manifest_path)}: imported source {source_id} is verified but canonical source is rejected"
+                    )
+                if canonical.get("rights_status") == "do_not_upload" and source.get("import_status") in {"imported", "stale"}:
+                    if source.get("upload_approved_by_human") is not True:
+                        errors.append(
+                            f"{display_path(manifest_path)}: source {source_id} is do_not_upload but appears in NotebookLM imports"
+                        )
 
     return errors
 
@@ -445,7 +643,9 @@ def validate_notebooklm_export_index(project: Path, index_path: Path) -> list[st
     errors: list[str] = []
     index = load_yaml(index_path)
     errors.extend(check_required_keys(display_path(index_path), index, EXPORT_INDEX_REQUIRED))
-    source_ids = load_source_ids(project)
+    source_registry = load_source_registry(project)
+    source_ids = set(source_registry)
+    imported_sources = load_notebooklm_imports(project)
 
     if not isinstance(index, dict):
         return errors
@@ -485,17 +685,106 @@ def validate_notebooklm_export_index(project: Path, index_path: Path) -> list[st
         )
         if export.get("allowed_for_claims") is True:
             errors.append(f"{display_path(index_path)}: export {export_id} must not be allowed_for_claims")
+        verification_status = export.get("verification_status")
+        if export.get("allowed_for_evidence_map") is True and verification_status != "verified":
+            errors.append(f"{display_path(index_path)}: export {export_id} cannot be allowed_for_evidence_map unless verified")
         listed_source_ids = export.get("source_ids")
         if not isinstance(listed_source_ids, list):
             errors.append(f"{display_path(index_path)}: export {export_id} source_ids must be a list")
         else:
+            if verification_status == "verified" and not listed_source_ids:
+                errors.append(f"{display_path(index_path)}: verified export {export_id} must list source_ids")
             for source_id in listed_source_ids:
                 if source_ids and source_id not in source_ids:
                     errors.append(f"{display_path(index_path)}: export {export_id} unknown source_id: {source_id}")
+                    continue
+                canonical = source_registry.get(str(source_id))
+                if canonical:
+                    if canonical.get("citation_status") == "rejected":
+                        errors.append(f"{display_path(index_path)}: export {export_id} cites rejected source_id: {source_id}")
+                    if verification_status == "verified" and canonical.get("rights_status") == "do_not_upload":
+                        errors.append(f"{display_path(index_path)}: verified export {export_id} cites do_not_upload source_id: {source_id}")
+                    if export.get("publication_critical") is True and canonical.get("rights_status") in PUBLICATION_RISK_RIGHTS:
+                        if canonical.get("publication_approved_by_human") is not True:
+                            errors.append(
+                                f"{display_path(index_path)}: publication-critical export {export_id} cites source {source_id} "
+                                "with unsafe rights_status"
+                            )
+                if verification_status == "verified":
+                    stale_imports = [
+                        item
+                        for item in imported_sources.get(str(source_id), [])
+                        if item.get("import_status") == "stale"
+                    ]
+                    if stale_imports:
+                        errors.append(f"{display_path(index_path)}: verified export {export_id} depends on stale source_id: {source_id}")
         output_path = export.get("output_path")
+        if verification_status == "verified" and output_path in {"", "TBD", None}:
+            errors.append(f"{display_path(index_path)}: verified export {export_id} must have an output_path")
         if isinstance(output_path, str) and output_path not in {"", "TBD"} and not (project / output_path).exists():
             errors.append(f"{display_path(index_path)}: export {export_id} output_path missing: {output_path}")
 
+    return errors
+
+
+def validate_run_records(project: Path) -> list[str]:
+    errors: list[str] = []
+    search_roots = [
+        project / "50_runs",
+        project / "40_code" / "repo" / "results",
+    ]
+
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for record_path in sorted(root.rglob("run_record.yaml")):
+            errors.extend(validate_instance_with_schema(record_path, RUN_RECORD_SCHEMA))
+            try:
+                record = load_yaml(record_path)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{display_path(record_path)}: {exc}")
+                continue
+            if not isinstance(record, dict):
+                errors.append(f"{display_path(record_path)}: expected mapping")
+                continue
+
+            for key in ["config_path", "metrics_path", "stdout_path", "stderr_path", "environment_path"]:
+                value = record.get(key)
+                if isinstance(value, str) and value and not (record_path.parent / value).exists():
+                    errors.append(f"{display_path(record_path)}: {key} missing: {value}")
+
+    return errors
+
+
+def supported_claim_ids(project: Path) -> set[str]:
+    claims_path = project / "70_claims" / "claims.yaml"
+    if not claims_path.exists():
+        return set()
+    claims = load_yaml(claims_path)
+    if not isinstance(claims, dict) or not isinstance(claims.get("claims"), list):
+        return set()
+    return {
+        str(claim.get("claim_id"))
+        for claim in claims["claims"]
+        if isinstance(claim, dict) and claim.get("claim_id") and claim.get("status") == "supported"
+    }
+
+
+def check_manuscript_claim_ids(project: Path) -> list[str]:
+    manuscript = project / "80_manuscript"
+    if not manuscript.exists():
+        return []
+
+    valid_claims = supported_claim_ids(project)
+    errors: list[str] = []
+    for path in sorted(manuscript.rglob("*")):
+        if not path.is_file() or path.suffix not in {".md", ".tex"}:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for match in CLAIM_ID_RE.finditer(text):
+            claim_id = match.group(1)
+            if claim_id not in valid_claims:
+                errors.append(f"{display_path(path)}: manuscript references unsupported or unknown claim id: {claim_id}")
     return errors
 
 
@@ -512,6 +801,11 @@ def validate_project(project: Path) -> list[str]:
 
     errors.extend(check_single_line_files(project))
     errors.extend(check_json(project / "20_ideas" / "idea_pool.json"))
+
+    for relative, schema_name in PROJECT_SCHEMA_FILES.items():
+        path = project / relative
+        if path.exists():
+            errors.extend(validate_instance_with_schema(path, schema_name))
 
     spec_checks = [
         (project / "30_specs" / "research_spec.yaml", RESEARCH_REQUIRED),
@@ -555,6 +849,9 @@ def validate_project(project: Path) -> list[str]:
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{display_path(export_index_path)}: {exc}")
 
+    errors.extend(validate_run_records(project))
+    errors.extend(check_manuscript_claim_ids(project))
+
     return errors
 
 
@@ -574,7 +871,7 @@ def project_paths(args: argparse.Namespace) -> list[Path]:
 
 def main() -> int:
     args = parse_args()
-    errors: list[str] = []
+    errors: list[str] = validate_repository_files()
 
     for project in project_paths(args):
         project_errors = validate_project(project)

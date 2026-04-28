@@ -74,8 +74,19 @@
           },
           "rights_status": {
             "type": "string",
-            "enum": ["unknown", "permitted", "restricted", "public", "internal_only"]
+            "enum": [
+              "open_access",
+              "owned",
+              "licensed",
+              "unknown",
+              "permitted",
+              "restricted",
+              "public",
+              "internal_only",
+              "do_not_upload"
+            ]
           },
+          "upload_approved_by_human": { "type": "boolean" },
           "export_paths": {
             "type": "array",
             "items": { "type": "string" }
@@ -105,4 +116,3 @@
   },
   "additionalProperties": true
 }
-

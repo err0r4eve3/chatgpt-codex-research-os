@@ -2,23 +2,41 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "run_record",
   "type": "object",
-  "required": ["run_id", "status", "command", "git_commit", "metrics"],
+  "required": [
+    "run_id",
+    "experiment_id",
+    "method",
+    "dataset",
+    "seed",
+    "status",
+    "command",
+    "config_path",
+    "metrics_path",
+    "stdout_path",
+    "stderr_path",
+    "git_commit",
+    "environment_path"
+  ],
   "properties": {
     "run_id": { "type": "string" },
     "status": {
       "type": "string",
-      "enum": ["success", "failed", "placeholder", "skipped"]
+      "enum": ["completed", "success", "failed", "placeholder", "skipped"]
     },
+    "experiment_id": { "type": "string" },
     "command": { "type": "string" },
     "git_commit": { "type": "string" },
-    "metrics": {
-      "type": "object"
-    },
+    "config_path": { "type": "string" },
+    "metrics_path": { "type": "string" },
+    "stdout_path": { "type": "string" },
+    "stderr_path": { "type": "string" },
+    "environment_path": { "type": "string" },
+    "started_at": { "type": "string" },
+    "finished_at": { "type": "string" },
+    "failure_reason": { "type": "string" },
     "dataset": { "type": "string" },
     "method": { "type": "string" },
-    "seed": { "type": "integer" },
-    "environment": { "type": "object" }
+    "seed": { "type": "integer" }
   },
   "additionalProperties": true
 }
-

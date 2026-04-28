@@ -18,6 +18,7 @@ projects/*/40_code/repo/cmake-build-*/
 projects/*/40_code/repo/.cache/
 projects/*/40_code/repo/results/**
 !projects/*/40_code/repo/results/.gitkeep
+projects/*/40_code/repo/reports/**
 
 # Large local-only raw artifacts. Keep audited summaries and selected logs intentionally.
 projects/*/50_runs/**/raw/

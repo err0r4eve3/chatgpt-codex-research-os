@@ -46,6 +46,12 @@ Aggregate results:
 python scripts/aggregate.py --runs results/ --out reports/
 ```
 
+Makefile shortcut:
+
+```bash
+make aggregate
+```
+
 ## Reporting Format
 
 After each task, report:

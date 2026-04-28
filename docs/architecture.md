@@ -18,7 +18,7 @@ Codex Engineering Executor layer
 
 Evidence / Trace layer
   Stores literature evidence, experiment logs, seeds, configs, metrics, figures,
-  statistical tests, and claim-to-evidence mappings.
+  statistical tests, NotebookLM source manifests, and claim-to-evidence mappings.
 
 Manuscript Compiler layer
   Compiles draft sections, appendix material, reproducibility notes, and AI disclosure
@@ -64,3 +64,4 @@ Every paper conclusion must trace to:
 - statistical or repeated-run evidence
 - relevant literature evidence
 
+NotebookLM may help organize and interrogate literature evidence, but the trace must point to the underlying source and checked-in project artifact, not only to a NotebookLM answer.

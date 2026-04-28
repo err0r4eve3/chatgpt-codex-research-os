@@ -27,7 +27,7 @@ P0 topic intake
 | Stage | Goal | Main Owner | Key Output | Gate |
 | --- | --- | --- | --- | --- |
 | P0 | Define research boundary | Pro + human | `00_intake/problem_brief.md` | Question is measurable |
-| P1 | Avoid duplicate work | Pro | `10_literature/paper_table.csv`, `evidence_map.md` | Core baselines covered |
+| P1 | Avoid duplicate work | Pro + NotebookLM | `10_literature/paper_table.csv`, `evidence_map.md`, `notebooklm_manifest.yaml` | Core baselines covered |
 | P2 | Generate candidates | Pro | `20_ideas/idea_pool.json` | Ideas are experimentally testable |
 | P3 | Filter weak ideas | Pro + human | `20_ideas/selected_idea.md` | 1-3 ideas remain |
 | P4 | Freeze experiment protocol | Pro + Codex feasibility check | `30_specs/experiment_spec.yaml` | Experiment is reproducible |
@@ -44,3 +44,9 @@ P0 topic intake
 
 Advance one state transition per work session when possible. Avoid asking Codex to implement an entire paper system in one task.
 
+## NotebookLM Checkpoints
+
+- P1: create or link a NotebookLM notebook, ingest verified literature sources, and record IDs in `10_literature/notebooklm_manifest.yaml`.
+- P3: query the notebook for novelty and baseline risks, then verify against underlying sources.
+- P5: use NotebookLM only to audit written summaries against sources; use repository logs and metrics for experimental truth.
+- P7: draft only from `claims.yaml`, `result_summary.md`, and source-grounded literature notes.

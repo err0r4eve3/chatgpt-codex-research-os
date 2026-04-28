@@ -11,3 +11,9 @@ baselines:
     known_limitations:
       - "TBD"
 
+fairness_checks:
+  - "same input preprocessing"
+  - "same compiler or runtime flags where applicable"
+  - "same hardware assumptions"
+  - "same metrics schema"
+  - "failed baseline runs are logged, not dropped"

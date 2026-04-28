@@ -14,6 +14,21 @@ This workflow is deliberately human-in-the-loop. Do not automate model calls acr
 7. Pro audits and recommends continue / revise / kill.
 ```
 
+## NotebookLM Loop
+
+Use this loop during literature-heavy stages:
+
+```text
+1. Human or Codex adds verified sources to NotebookLM.
+2. Source IDs are recorded in notebooklm_manifest.yaml.
+3. Pro asks focused source-grounded questions.
+4. Human or Codex exports useful summaries to notebooklm_exports/.
+5. Findings are checked against underlying sources.
+6. Verified facts move into evidence_map.md or paper_table.csv.
+```
+
+NotebookLM output should not skip the evidence gate. Treat it as organized memory and source Q&A, not as final authority.
+
 ## Codex Task Shape
 
 Good Codex tasks are engineering tasks:
@@ -46,4 +61,3 @@ Batch ideas, not papers:
 ```
 
 Every idea must be killable.
-

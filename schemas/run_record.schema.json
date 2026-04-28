@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "run_record",
+  "type": "object",
+  "required": ["run_id", "status", "command", "git_commit", "metrics"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["success", "failed", "placeholder", "skipped"]
+    },
+    "command": { "type": "string" },
+    "git_commit": { "type": "string" },
+    "metrics": {
+      "type": "object"
+    },
+    "dataset": { "type": "string" },
+    "method": { "type": "string" },
+    "seed": { "type": "integer" },
+    "environment": { "type": "object" }
+  },
+  "additionalProperties": true
+}
+

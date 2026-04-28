@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "notebooklm_manifest",
+  "type": "object",
+  "required": [
+    "notebook",
+    "interface_policy",
+    "source_registry",
+    "export_policy",
+    "sync_policy",
+    "allowed_uses",
+    "prohibited_uses"
+  ],
+  "properties": {
+    "notebook": {
+      "type": "object",
+      "required": ["id", "title", "cli_alias"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "profile": { "type": "string" },
+        "cli_alias": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "interface_policy": {
+      "type": "object",
+      "required": ["preferred_for_cli", "preferred_for_mcp"],
+      "additionalProperties": true
+    },
+    "source_registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "title", "source_type", "citation_status"],
+        "additionalProperties": true
+      }
+    },
+    "export_policy": {
+      "type": "object",
+      "required": ["directory"],
+      "additionalProperties": true
+    },
+    "sync_policy": {
+      "type": "object",
+      "required": ["record_every_import", "verify_before_claims"],
+      "additionalProperties": true
+    },
+    "allowed_uses": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "prohibited_uses": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}
+

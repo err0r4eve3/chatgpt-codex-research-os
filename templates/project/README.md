@@ -28,6 +28,7 @@ P9 human final decision
 
 - Research boundary: `00_intake/`
 - Literature evidence: `10_literature/`
+- NotebookLM literature memory: `10_literature/notebooklm_manifest.yaml`
 - Idea selection: `20_ideas/`
 - Experiment contract: `30_specs/`
 - Engineering work: `40_code/repo/`
@@ -37,4 +38,3 @@ P9 human final decision
 - Manuscript draft: `80_manuscript/`
 - Reviews and revisions: `90_reviews/`
 - Final or rejected packages: `99_archive/`
-

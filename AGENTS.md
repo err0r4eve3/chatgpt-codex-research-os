@@ -15,6 +15,7 @@ Treat this repository as an audit system, not a manuscript generator. Do not inv
 - `scripts/`: standard-library project tooling.
 - `templates/project/`: source template for new research projects.
 - `projects/`: real project instances created from the template.
+- `.agents/skills/notebooklm-research/`: repository workflow for NotebookLM CLI/MCP-backed literature work.
 
 ## Common Commands
 
@@ -32,6 +33,12 @@ Validate a project:
 python scripts/validate_artifacts.py --project projects/<project_id>
 ```
 
+Validate the template:
+
+```bash
+python scripts/validate_artifacts.py --template
+```
+
 Validate all projects:
 
 ```bash
@@ -45,6 +52,8 @@ python scripts/validate_artifacts.py --all
 - Do not claim SOTA unless `claims.yaml` explicitly supports it with fair baselines and citations.
 - Do not delete failed runs or negative results.
 - Keep literature evidence in `10_literature/`; keep implementation outputs in `50_runs/`; keep conclusions in `70_claims/`.
+- Use NotebookLM only as source-centered research memory. Verify NotebookLM answers against underlying sources before adding facts or claims.
+- Keep NotebookLM notebook IDs, source IDs, aliases, and exports in `10_literature/notebooklm_manifest.yaml` and `10_literature/notebooklm_exports/`.
 - Prefer small, reviewable stage transitions over broad rewrites.
 
 ## Engineering Rules

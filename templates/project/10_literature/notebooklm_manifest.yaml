@@ -1,0 +1,54 @@
+notebook:
+  id: "TBD"
+  title: "__PROJECT_TITLE__ Literature Evidence"
+  profile: "default"
+  cli_alias: "__PROJECT_ID__"
+
+interface_policy:
+  preferred_for_cli:
+    - "notebook creation"
+    - "source import"
+    - "alias management"
+    - "artifact download"
+  preferred_for_mcp:
+    - "structured note operations"
+    - "batch queries when MCP tools are available"
+  ask_when_both_available: true
+
+source_registry:
+  - source_id: "TBD"
+    title: "TBD"
+    source_type: "paper | url | drive | text"
+    url_or_reference: "TBD"
+    added_by: "human"
+    added_on: "TBD"
+    citation_status: "unverified"
+    notes: "Replace this placeholder after adding real sources."
+
+export_policy:
+  directory: "10_literature/notebooklm_exports"
+  allowed_formats:
+    - "markdown"
+    - "text"
+    - "json"
+  rule: "Exports are leads for evidence_map.md, not final citations."
+
+sync_policy:
+  record_every_import: true
+  verify_before_claims: true
+  stale_drive_sources_checked: false
+  last_checked: "TBD"
+
+allowed_uses:
+  - "Literature source organization"
+  - "Source-grounded Q&A during P1 and P3"
+  - "Reviewer-risk discovery from imported sources"
+  - "Drafting evidence_map.md notes after source verification"
+
+prohibited_uses:
+  - "Do not store secrets, cookies, credentials, or private keys."
+  - "Do not treat NotebookLM summaries as final facts."
+  - "Do not replace repository code inspection."
+  - "Do not replace experiment logs, metrics, or statistical tests."
+  - "Do not create manuscript claims outside claims.yaml."
+

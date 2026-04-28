@@ -36,6 +36,7 @@ Every publishable claim must be traceable back to experiment commands, logs, cod
     validate_artifacts.py    Validate required project files and basic contracts
   templates/project/         Auditable research project template
   projects/                  Real research projects created from the template
+  .agents/skills/            Repository-specific reusable workflows
 ```
 
 ## Quick Start
@@ -52,6 +53,12 @@ Validate its structure:
 
 ```bash
 python scripts/validate_artifacts.py --project projects/2026-04-graph-cache-optimization
+```
+
+Validate the project template:
+
+```bash
+python scripts/validate_artifacts.py --template
 ```
 
 Then work one stage at a time:
@@ -80,6 +87,7 @@ P9 human final decision
 - `50_runs/` stores real execution records.
 - `70_claims/claims.yaml` is the authority for what may appear in the paper.
 - `80_manuscript/` is generated from evidence, not used as a source of truth.
+- NotebookLM is used for source-centered literature memory via `10_literature/notebooklm_manifest.yaml`; its summaries must be verified against underlying sources.
 
 ## Minimum Viable Use
 

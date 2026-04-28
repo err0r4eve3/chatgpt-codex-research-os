@@ -43,6 +43,7 @@ def main() -> int:
         print(f"error: missing template directory: {TEMPLATE}", file=sys.stderr)
         return 2
 
+    PROJECTS.mkdir(parents=True, exist_ok=True)
     destination = PROJECTS / project_id
     if destination.exists():
         if not args.force:
@@ -59,7 +60,13 @@ def main() -> int:
     for path in destination.rglob("*"):
         if not path.is_file():
             continue
-        text = path.read_text(encoding="utf-8")
+        raw = path.read_bytes()
+        if b"\0" in raw:
+            continue
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
         for old, new in replacements.items():
             text = text.replace(old, new)
         path.write_text(text, encoding="utf-8", newline="\n")
@@ -71,4 +78,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

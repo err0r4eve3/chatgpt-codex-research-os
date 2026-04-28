@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "baseline_spec",
+  "type": "object",
+  "required": ["baselines", "fairness_checks"],
+  "properties": {
+    "baselines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "source", "version_or_commit"],
+        "properties": {
+          "name": { "type": "string" },
+          "source": { "type": "string" },
+          "version_or_commit": { "type": "string" },
+          "implementation_path": { "type": "string" },
+          "fairness_requirements": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "known_limitations": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "fairness_checks": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}
+

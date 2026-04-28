@@ -10,10 +10,11 @@ Seed references from the initial research brief:
 | Introducing the Codex app | https://openai.com/index/introducing-the-codex-app/ | Background on Codex app project, thread, and worktree workflow |
 | Codex CLI | https://developers.openai.com/codex/cli | Background on local Codex CLI workflow |
 
+NotebookLM-specific project source records live in each project's `10_literature/notebooklm_manifest.yaml`. NotebookLM summaries are leads; final references must cite the underlying source.
+
 Rules:
 
 - Prefer primary sources: papers, official benchmark pages, official repositories, official product docs.
 - Record title, date or version, URL, and uncertainty.
 - If a source affects implementation behavior and may have changed, re-check it before relying on it.
 - Do not treat uncited summaries as final facts.
-

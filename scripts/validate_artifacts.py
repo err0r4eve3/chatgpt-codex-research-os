@@ -364,6 +364,7 @@ def validate_github_actions() -> list[str]:
     path = ROOT / ".github" / "workflows" / "validate.yml"
     required_fragments = [
         "python -m py_compile",
+        "python tests/run_validator_cases.py",
         "python scripts/check_line_endings.py",
         "python scripts/validate_artifacts.py --template",
         "python scripts/new_project.py 2026-04-smoke-test --force",
